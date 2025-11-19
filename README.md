@@ -35,4 +35,4 @@ This application should be run on a physical Android device to take advantage of
 ### Models used
 
 Downloading, extraction, and placing the models into the *assets* folder is
-managed automatically by the **download.gradle** file.
+managed automatically by the **download.gradle** file."# smilehairclinic_mobile_hackathon"  
