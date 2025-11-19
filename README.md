@@ -1,38 +1,95 @@
-# MediaPipe Tasks Face Landmark Detection Android Demo
+Self-Capture Tool: Otonom Saç Analizi ve Fotoğraf Asistanı
 
-### Overview
+Mobile Hackathon Final Projesi Smile Hair Clinic & Coderspace iş birliği ile geliştirilmiştir.
 
-This is a camera app that can  detects face landmarks either from continuous camera frames seen by your device's front camera, an image, or a video from the device's gallery using a custom **task** file.
+Bu proje, saç ekimi veya analizi süreçlerinde kullanıcıların kendi fotoğraflarını (selfie) belirlenen 5 kritik açıdan, yardımsız, tutarlı ve yüksek doğrulukla çekebilmelerini sağlayan akıllı bir Android mobil uygulamasıdır.
 
-The task file is downloaded by a Gradle script when you build and run the app. You don't need to do any additional steps to download task files into the project explicitly unless you wish to use your own landmark detection task. If you do use your own task file, place it into the app's *assets* directory.
+Proje Amacı ve Problem Tanımı
 
-This application should be run on a physical Android device to take advantage of the camera.
+Kullanıcıların saç ve kafa derisi bölgelerini kapsayan fotoğrafları dışarıdan yardım almadan çekmeleri genellikle zorlu bir süreçtir. Mevcut yöntemlerdeki tutarsız pozlama ve açı hatalarını gidermek amacıyla bu proje geliştirilmiştir.
 
-## Build the demo using Android Studio
+Temel Hedef: Kullanıcının yardım almadan, belirlenen açılarda ve tutarlı pozlamalarla fotoğraf çekebilmesi için akıllı, tam otomatik ve yönlendirici bir arayüz (Self-Capture Tool) sunmaktır.
 
-### Prerequisites
+Teknik Mimari ve Yaklaşım
 
-*   The **[Android Studio](https://developer.android.com/studio/index.html)** IDE. This sample has been tested on Android Studio Dolphin.
+Proje, yüksek maliyet, ağ gecikmesi (latency) ve API bağımlılığı yaratan bulut tabanlı çözümler yerine, işlem gücünü mobil cihazın kendisine yıkan Edge AI (Uçta Yapay Zeka) prensibiyle geliştirilmiştir.
 
-*   A physical Android device with a minimum OS version of SDK 24 (Android 7.0 -
-    Nougat) with developer mode enabled. The process of enabling developer mode
-    may vary by device.
+Platform: Android (Native) - Kotlin
 
-### Building
+Test Cihazı: Xiaomi 14 Ultra (Android 15)
 
-*   Open Android Studio. From the Welcome screen, select Open an existing
-    Android Studio project.
+Temel Mimari: Hibrit Model (MediaPipe + YOLO)
 
-*   From the Open File or Project window that appears, navigate to and select
-    the mediapipe/examples/face_landmarker/android directory. Click OK. You may
-    be asked if you trust the project. Select Trust.
+Kullanılan Modeller ve Algoritmalar
 
-*   If it asks you to do a Gradle Sync, click OK.
+MediaPipe Face Mesh:
 
-*   With your Android device connected to your computer and developer mode
-    enabled, click on the green Run arrow in Android Studio.
+Yüzün takibi ve açısal hesaplamalar için Google’ın hafif ve performanslı modeli kullanılmıştır.
 
-### Models used
+468 adet 3B landmark noktası işlenerek kafa pozisyonu modellenmiştir.
 
-Downloading, extraction, and placing the models into the *assets* folder is
-managed automatically by the **download.gradle** file."# smilehairclinic_mobile_hackathon"  
+YOLOv8n (Nano):
+
+Yüz referansının bulunmadığı 5. Açı (Arka Donör Bölgesi) tespiti için kullanılmıştır.
+
+Kliniğin veri setiyle model özel olarak eğitilmiştir (Custom Object Detection).
+
+Matematiksel Modelleme (Pose Estimation):
+
+PnP (Perspective-n-Point): 2B görüntü noktalarının 3B dünya koordinatlarıyla eşleştirilmesi.
+
+Rodrigues Dönüşümü: Rotasyon vektörünün matrise çevrilmesi.
+
+Euler Açıları: Pitch (x), Yaw (y) ve Roll (z) değerlerinin hesaplanması.
+
+Modellenen 5 Kritik Açı
+
+Sistem, kafa pozisyonunu H(pitch, yaw, roll) vektörleri olarak modeller ve aşağıdaki pozisyonları otomatik algılar:
+
+Tam Yüz Karşıdan: H(0,0,0)
+
+45 Derece Sağa Bakış: H(0,-45,0)
+
+45 Derece Sola Bakış: H(0,45,0)
+
+Tepe Kısmı (Vertex): H(45,0,0) - Vektörel projeksiyon ile tahmin edilir.
+
+Arka Donör Bölgesi: H(180,0,0) - Nesne tespiti ile yakalanır.
+
+Kılavuzlama ve Otonom Çekim Mekanizması
+
+Kullanıcı deneyimini artırmak için görsel, işitsel ve dokunsal (haptic) geri bildirimler sisteme entegre edilmiştir.
+
+Hizalama ve Toleranslar
+
+Açısal Tolerans: İdeal pozisyonlar için deneysel olarak %5 tolerans belirlenmiştir.
+
+Hizalama Toleransı: Yüz şekillerindeki farklılıklar için %10 tolerans eklenmiştir.
+
+Otomatik Deklanşör: Hedef açı ve konum sağlandığında sistem 1 saniye stabilite bekler ve otomatik çekim yapar.
+
+Açı Bazlı Yöntemler
+
+1, 2 ve 3. Açılar: Yüz landmark verileri kullanılarak elips kılavuz çizilir. Burun ucu referans alınarak yüzün merkezde olup olmadığı kontrol edilir.
+
+4. Açı (Vertex): Yüz landmarklarından yola çıkarak kafa tasının görünmeyen üst sınırını kestiren vektörel projeksiyon yöntemi kullanılır. Başın eğim açısının (pitch) 35-40 derece aralığında olması beklenir.
+
+5. Açı (Donör): YOLOv8n modeli ile arka kafa bölgesi tespit edilir ve kullanıcı sesli komutlarla yönlendirilir.
+
+Kullanılan Temel Komutlar:
+
+"Yüzünü Ortala", "Başını Dik Tut", "Biraz Yaklaş", "Başını Eğ", "Düz Dur".
+
+Tutarlılık Analizi ve Sonuçlar
+
+Sistemin başarısı, çekilen görüntülerin MediaPipe Selfie Segmentation modeli ile maskelenmesi ve IoU (Intersection over Union) skorlarının hesaplanmasıyla test edilmiştir.
+
+Her açı için 10'ar adet fotoğraf çekilmiş ve çapraz kıyaslama (10x10 matris) yapılmıştır.
+
+Ağır bir son işleme (heavy post-processing) gerek kalmadan, ham veriler üzerinde yüksek kararlılık (State-of-the-art seviyesi) elde edilmiştir.
+
+Detaylı IoU matrisleri ve doğrulama kodları proje reposunda mevcuttur.
+
+Demo
+
+Projenin çalışma prensibini ve canlı demosunu aşağıdaki bağlantıdan izleyebilirsiniz:
