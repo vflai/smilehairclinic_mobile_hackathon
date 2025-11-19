@@ -1,5 +1,5 @@
 
-# Self-Capture Tool: Otonom Saç Analizi Fotoğraf Asistanı
+# Self-Capture Tool: Otonom Saç Analizi Fotoğraf Asistanı (Edge-AI)
 
 **Mobile Hackathon Final Projesi** _Smile Hair Clinic & Coderspace iş birliği ile geliştirilmiştir._
 
